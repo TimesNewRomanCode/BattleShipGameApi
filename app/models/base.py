@@ -10,8 +10,13 @@ class TimestampMixin:
 
 
 class SidMixin:
-    sid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, unique=True,
-    nullable=False, )
+    sid: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        default=uuid.uuid4,
+        primary_key=True,
+        unique=True,
+        nullable=False,
+    )
 
 
 class Base(DeclarativeBase, SidMixin, TimestampMixin):

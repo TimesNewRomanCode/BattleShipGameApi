@@ -11,5 +11,3 @@ router.include_router(players_router)
 router.include_router(games_router)
 
 router.include_router(websocket_router)
-
-

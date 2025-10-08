@@ -11,7 +11,14 @@ class WebSocketService:
         self.games_crud = GamesCRUD()
         self.players_crud = PlayersCRUD()
 
-    async def handle_shot(self, game_sid: uuid.UUID, player_sid: uuid.UUID, x: int, y: int, session: AsyncSession):
+    async def handle_shot(
+        self,
+        game_sid: uuid.UUID,
+        player_sid: uuid.UUID,
+        x: int,
+        y: int,
+        session: AsyncSession,
+    ):
         game = await self.games_crud.get_game_by_sid(game_sid, session)
         if not game:
             return {"error": "Game not found"}
@@ -22,19 +29,27 @@ class WebSocketService:
         if game.current_turn_sid != player_sid:
             return {"error": "Not your turn"}
 
-        target_player_sid = game.player2_sid if player_sid == game.player1_sid else game.player1_sid
+        target_player_sid = (
+            game.player2_sid if player_sid == game.player1_sid else game.player1_sid
+        )
 
-        board_cell = await self.games_crud.get_board_cell(game_sid, target_player_sid, x, y, session)
+        board_cell = await self.games_crud.get_board_cell(
+            game_sid, target_player_sid, x, y, session
+        )
 
         if board_cell and board_cell.is_ship:
             board_cell.is_hit = True
             result = "HIT"
 
-            ship_destroyed = await self._check_ship_destroyed(game_sid, target_player_sid, x, y, session)
+            ship_destroyed = await self._check_ship_destroyed(
+                game_sid, target_player_sid, x, y, session
+            )
             if ship_destroyed:
                 result = "KILL"
 
-            game_over = await self._check_game_over(game_sid, target_player_sid, session)
+            game_over = await self._check_game_over(
+                game_sid, target_player_sid, session
+            )
             if game_over:
                 game.status = GameStatus.finished
                 game.winner_sid = player_sid
@@ -51,13 +66,22 @@ class WebSocketService:
             "y": y,
             "next_turn": game.current_turn_sid,
             "game_over": game.status == GameStatus.finished,
-            "winner": game.winner_sid if game.status == GameStatus.finished else None
+            "winner": game.winner_sid if game.status == GameStatus.finished else None,
         }
 
-    async def _check_ship_destroyed(self, game_sid: uuid.UUID, player_sid: uuid.UUID, x: int, y: int, session: AsyncSession):
+    async def _check_ship_destroyed(
+        self,
+        game_sid: uuid.UUID,
+        player_sid: uuid.UUID,
+        x: int,
+        y: int,
+        session: AsyncSession,
+    ):
         return True
 
-    async def _check_game_over(self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession):
+    async def _check_game_over(
+        self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession
+    ):
         ships = await self.games_crud.get_player_ships(game_sid, player_sid, session)
         return all(ship.is_hit for ship in ships)
 
@@ -69,7 +93,9 @@ class WebSocketService:
             return True
         return False
 
-    async def surrender_game(self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession):
+    async def surrender_game(
+        self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession
+    ):
         game = await self.games_crud.get_game_by_sid(game_sid, session)
         if not game:
             return None

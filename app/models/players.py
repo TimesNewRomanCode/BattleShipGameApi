@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
+
 class Players(Base):
     __tablename__ = "players"
 

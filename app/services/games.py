@@ -10,15 +10,21 @@ class GamesService:
     def __init__(self):
         self.games_crud = GamesCRUD()
 
-    async def create_game_with_boards(self, player1_sid: uuid.UUID, player2_sid: uuid.UUID, session: AsyncSession):
+    async def create_game_with_boards(
+        self, player1_sid: uuid.UUID, player2_sid: uuid.UUID, session: AsyncSession
+    ):
         player1 = await self.games_crud.get_player_by_sid(player1_sid, session)
         player2 = await self.games_crud.get_player_by_sid(player2_sid, session)
 
         if not player1 or not player2:
             raise ValueError("Один из игроков не найден")
 
-        player1_active_games = await self.games_crud.get_player_active_games(player1_sid, session)
-        player2_active_games = await self.games_crud.get_player_active_games(player2_sid, session)
+        player1_active_games = await self.games_crud.get_player_active_games(
+            player1_sid, session
+        )
+        player2_active_games = await self.games_crud.get_player_active_games(
+            player2_sid, session
+        )
 
         if player1_active_games:
             raise ValueError(f"Игрок {player1.username} уже находится в активной игре")
@@ -30,7 +36,7 @@ class GamesService:
             player1_sid=player1_sid,
             player2_sid=player2_sid,
             status=GameStatus.waiting,
-            current_turn_sid=player1_sid
+            current_turn_sid=player1_sid,
         )
 
         game = await self.games_crud.create_game(game, session)
@@ -40,7 +46,9 @@ class GamesService:
 
         return game
 
-    async def _create_ships_for_player(self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession):
+    async def _create_ships_for_player(
+        self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession
+    ):
         ships = self._generate_ships()
 
         boards = []
@@ -51,7 +59,7 @@ class GamesService:
                 x=ship_x,
                 y=ship_y,
                 is_ship=True,
-                is_hit=False
+                is_hit=False,
             )
             boards.append(board)
 
@@ -126,8 +134,12 @@ class GamesService:
         for game in games:
             boards = await self.games_crud.get_boards_by_game(game.sid, session)
 
-            player1_boards = [board for board in boards if board.player_sid == game.player1_sid]
-            player2_boards = [board for board in boards if board.player_sid == game.player2_sid]
+            player1_boards = [
+                board for board in boards if board.player_sid == game.player1_sid
+            ]
+            player2_boards = [
+                board for board in boards if board.player_sid == game.player2_sid
+            ]
 
             game_data = {
                 "game_sid": game.sid,
@@ -141,7 +153,7 @@ class GamesService:
                             "x": board.x,
                             "y": board.y,
                             "is_ship": board.is_ship,
-                            "is_hit": board.is_hit
+                            "is_hit": board.is_hit,
                         }
                         for board in player1_boards
                     ],
@@ -150,11 +162,11 @@ class GamesService:
                             "x": board.x,
                             "y": board.y,
                             "is_ship": board.is_ship,
-                            "is_hit": board.is_hit
+                            "is_hit": board.is_hit,
                         }
                         for board in player2_boards
-                    ]
-                }
+                    ],
+                },
             }
             result.append(game_data)
 

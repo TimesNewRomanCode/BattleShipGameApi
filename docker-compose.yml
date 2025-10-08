@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   postgres:
@@ -12,7 +13,11 @@ services:
     ports:
       - "5432:5432"
     command: postgres -c listen_addresses='*'
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d BS"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -22,6 +27,28 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --requirepass ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: BS_app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/BS
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python main.py
 
 volumes:
   postgres_data:

@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import computed_field
 
+
 class Settings(BaseSettings):
 
     DB_DRIVER: str
@@ -39,5 +40,6 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
 
 settings = Settings()

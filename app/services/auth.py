@@ -21,19 +21,21 @@ class AuthService:
         self.user_crud = PlayersCRUD()
         self.oauth2_scheme = oauth2_scheme
 
-    async def _store_tokens_in_redis(self, user_sid: str, access_token: str, refresh_token: str):
+    async def _store_tokens_in_redis(
+        self, user_sid: str, access_token: str, refresh_token: str
+    ):
         redis_client = await get_redis()
 
         await redis_client.setex(
             f"access_token:{user_sid}",
             timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-            access_token
+            access_token,
         )
 
         await redis_client.setex(
             f"refresh_token:{user_sid}",
             timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-            refresh_token
+            refresh_token,
         )
 
     async def _is_token_valid(self, user_sid: str, token_type: str) -> bool:
@@ -50,8 +52,7 @@ class AuthService:
         existing_player = await self.user_crud.get_players_by_email(data.email, session)
         if existing_player:
             raise HTTPException(
-                status_code=400,
-                detail="User with this email already exists"
+                status_code=400, detail="User with this email already exists"
             )
 
         new_player = Players(
@@ -60,7 +61,7 @@ class AuthService:
             hashed_password=Hasher.get_password_hash(data.password),
         )
 
-        user = await self.user_crud.create_players(new_player, session)
+        await self.user_crud.create_players(new_player, session)
 
         return {"message": "User registered successfully"}
 
@@ -73,23 +74,25 @@ class AuthService:
         return user
 
     async def login_for_access_token(
-            self,
-            form_data: OAuth2PasswordRequestForm,
-            session: AsyncSession,
-            response: Response = None
+        self,
+        form_data: OAuth2PasswordRequestForm,
+        session: AsyncSession,
+        response: Response = None,
     ):
         login_data = LoginScheme(email=form_data.username, password=form_data.password)
         user = await self.login(login_data, session)
 
         if not user:
-            raise HTTPException(status_code=401, detail="Incorrect username or password")
+            raise HTTPException(
+                status_code=401, detail="Incorrect username or password"
+            )
 
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": user.email, "user_id": str(user.sid)}
         )
 
-        refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         refresh_token = create_refresh_token(
             data={"sub": user.email, "user_id": str(user.sid)}
         )
@@ -104,8 +107,7 @@ class AuthService:
                 secure=False,
                 samesite="lax",
                 max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                path="/"
-
+                path="/",
             )
 
             response.set_cookie(
@@ -115,7 +117,7 @@ class AuthService:
                 secure=False,
                 samesite="lax",
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-                path="/"
+                path="/",
             )
 
         return {
@@ -123,14 +125,11 @@ class AuthService:
             "refresh_token": refresh_token,
             "token_type": "bearer",
             "user_id": str(user.sid),
-            "email": user.email
+            "email": user.email,
         }
 
     async def refresh_access_token(
-            self,
-            refresh_token: str,
-            response: Response,
-            session: AsyncSession
+        self, refresh_token: str, response: Response, session: AsyncSession
     ):
         if not refresh_token:
             raise HTTPException(status_code=401, detail="Refresh token required")
@@ -153,7 +152,9 @@ class AuthService:
             if not user:
                 raise HTTPException(status_code=401, detail="User not found")
 
-            access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            access_token_expires = timedelta(
+                minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            )
             new_access_token = create_access_token(
                 data={"sub": user.email, "user_id": str(user.sid)}
             )
@@ -162,7 +163,7 @@ class AuthService:
             await redis_client.setex(
                 f"access_token:{user.sid}",
                 timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-                new_access_token
+                new_access_token,
             )
 
             response.set_cookie(
@@ -171,13 +172,10 @@ class AuthService:
                 httponly=True,
                 secure=False,
                 samesite="lax",
-                max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+                max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             )
 
-            return {
-                "access_token": new_access_token,
-                "token_type": "bearer"
-            }
+            return {"access_token": new_access_token, "token_type": "bearer"}
 
         except JWTError:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -191,9 +189,7 @@ class AuthService:
         return {"message": "Successfully logged out"}
 
     async def get_current_user_from_token(
-            self,
-            token: str = Depends(oauth2_scheme),
-            session: AsyncSession = None
+        self, token: str = Depends(oauth2_scheme), session: AsyncSession = None
     ):
         credentials_exception = HTTPException(
             status_code=401,

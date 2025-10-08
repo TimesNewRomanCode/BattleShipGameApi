@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.cruds.players import PlayersCRUD
 
+
 class PlayersService:
     def __init__(self):
         self.players_crud = PlayersCRUD()
@@ -13,12 +14,7 @@ class PlayersService:
     async def get_player_stats(self, player_sid: uuid.UUID, session: AsyncSession):
         games = await self.players_crud.get_player_stats(player_sid, session)
 
-        stats = {
-            "total_games": len(games),
-            "wins": 0,
-            "losses": 0,
-            "games": []
-        }
+        stats = {"total_games": len(games), "wins": 0, "losses": 0, "games": []}
 
         for game in games:
             is_winner = game.winner_sid == player_sid
@@ -27,12 +23,17 @@ class PlayersService:
             else:
                 stats["losses"] += 1
 
-            stats["games"].append({
-                "game_sid": str(game.sid),
-                "opponent": str(game.player2_sid) if game.player1_sid == player_sid else str(game.player1_sid),
-                "result": "win" if is_winner else "loss",
-                "date": game.created_at.isoformat() if game.created_at else None
-            })
+            stats["games"].append(
+                {
+                    "game_sid": str(game.sid),
+                    "opponent": (
+                        str(game.player2_sid)
+                        if game.player1_sid == player_sid
+                        else str(game.player1_sid)
+                    ),
+                    "result": "win" if is_winner else "loss",
+                    "date": game.created_at.isoformat() if game.created_at else None,
+                }
+            )
 
         return stats
-

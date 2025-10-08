@@ -18,11 +18,18 @@ class GameStatus(enum.Enum):
 class Games(Base):
     __tablename__ = "games"
 
-    player1_sid: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=False)
-    player2_sid: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=True)
-    status: Mapped[GameStatus] = mapped_column(Enum(GameStatus), default=GameStatus.waiting, nullable=False)
-    winner_sid: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=True)
+    player1_sid: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=False
+    )
+    player2_sid: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=True
+    )
+    status: Mapped[GameStatus] = mapped_column(
+        Enum(GameStatus), default=GameStatus.waiting, nullable=False
+    )
+    winner_sid: Mapped[Optional[UUID]] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=True
+    )
     current_turn_sid: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("players.sid"), nullable=True
     )
-

@@ -12,7 +12,7 @@ class RedisService:
             port=settings.REDIS_PORT,
             decode_responses=True,
             socket_connect_timeout=5,
-            socket_timeout=5
+            socket_timeout=5,
         )
         await self.redis.ping()
 

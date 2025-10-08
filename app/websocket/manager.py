@@ -1,6 +1,7 @@
 from typing import Dict, List
 import uuid
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[uuid.UUID, List] = {}
@@ -23,5 +24,6 @@ class ConnectionManager:
         if game_sid in self.active_connections:
             for connection in self.active_connections[game_sid]:
                 await connection.send_json(message)
+
 
 manager = ConnectionManager()

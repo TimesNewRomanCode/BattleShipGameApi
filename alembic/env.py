@@ -23,6 +23,7 @@ config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 target_metadata = Base.metadata  # noqa F405
 
+
 def run_migrations_offline():
     context.configure(
         url=DATABASE_URL,

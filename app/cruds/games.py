@@ -5,9 +5,8 @@ from app.models.players import Players
 from app.models.boards import Boards
 import uuid
 
+
 class GamesCRUD:
-    def __init__(self):
-        pass
 
     async def create_game(self, game: Games, session: AsyncSession):
         session.add(game)
@@ -25,11 +24,13 @@ class GamesCRUD:
         await session.refresh(board)
         return board
 
-    async def get_player_active_games(self, player_sid: uuid.UUID, session: AsyncSession):
+    async def get_player_active_games(
+        self, player_sid: uuid.UUID, session: AsyncSession
+    ):
         result = await session.execute(
             select(Games).where(
                 (Games.player1_sid == player_sid) | (Games.player2_sid == player_sid),
-                Games.status.in_([GameStatus.waiting, GameStatus.active])
+                Games.status.in_([GameStatus.waiting, GameStatus.active]),
             )
         )
         return result.scalars().all()
@@ -49,23 +50,32 @@ class GamesCRUD:
         )
         return result.scalars().all()
 
-    async def get_board_cell(self, game_sid: uuid.UUID, player_sid: uuid.UUID, x: int, y: int, session: AsyncSession):
+    async def get_board_cell(
+        self,
+        game_sid: uuid.UUID,
+        player_sid: uuid.UUID,
+        x: int,
+        y: int,
+        session: AsyncSession,
+    ):
         result = await session.execute(
             select(Boards).where(
                 Boards.game_sid == game_sid,
                 Boards.player_sid == player_sid,
                 Boards.x == x,
-                Boards.y == y
+                Boards.y == y,
             )
         )
         return result.scalars().first()
 
-    async def get_player_ships(self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession):
+    async def get_player_ships(
+        self, game_sid: uuid.UUID, player_sid: uuid.UUID, session: AsyncSession
+    ):
         result = await session.execute(
             select(Boards).where(
                 Boards.game_sid == game_sid,
                 Boards.player_sid == player_sid,
-                Boards.is_ship == True
+                Boards.is_ship == True,
             )
         )
         return result.scalars().all()
@@ -74,7 +84,9 @@ class GamesCRUD:
         result = await session.execute(select(Games).where(Games.sid == game_sid))
         return result.scalars().first()
 
-    async def update_game_status(self, game_sid: uuid.UUID, status: GameStatus, session: AsyncSession):
+    async def update_game_status(
+        self, game_sid: uuid.UUID, status: GameStatus, session: AsyncSession
+    ):
         game = await self.get_game_by_sid(game_sid, session)
         if game:
             game.status = status
@@ -85,7 +97,7 @@ class GamesCRUD:
         result = await session.execute(
             select(Games).where(
                 (Games.player1_sid == player_sid) | (Games.player2_sid == player_sid),
-                Games.status == GameStatus.finished
+                Games.status == GameStatus.finished,
             )
         )
         return result.scalars().all()
