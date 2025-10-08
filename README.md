@@ -14,7 +14,7 @@ docker-compose exec app alembic upgrade head
 
 
 ### Для тестов вебсокетов в постмане:
-### ws://localhost:8000/WS/games/3abefbbc-e8a5-44b7-a3c7-7a72ebb558fe/play
+### ws://localhost:8000/WS/games/game_sid/play
 
 ### Начать игру
 ```
